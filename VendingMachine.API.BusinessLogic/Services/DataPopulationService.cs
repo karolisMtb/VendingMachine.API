@@ -74,8 +74,8 @@ namespace VendingMachine.API.BusinessLogic.Services
                 new Product { Id = Guid.NewGuid(), ProductNumber = 4, Count = 5, Name = "Cheetos", Price = 0.90M, Timestamp = DateTime.UtcNow },
                 new Product { Id = Guid.NewGuid(), ProductNumber = 5, Count = 5, Name = "Apple", Price = 0.30M, Timestamp = DateTime.UtcNow },
                 new Product { Id = Guid.NewGuid(), ProductNumber = 6, Count = 5, Name = "Pear", Price = 0.35M, Timestamp = DateTime.UtcNow },
-                new Product { Id = Guid.NewGuid(), ProductNumber = 7, Count = 5, Name = "Fanta", Price = 1.2M, Timestamp = DateTime.UtcNow },
-                new Product { Id = Guid.NewGuid(), ProductNumber = 8, Count = 5, Name = "Cola zero", Price = 1.3M, Timestamp = DateTime.UtcNow },
+                new Product { Id = Guid.NewGuid(), ProductNumber = 7, Count = 5, Name = "Fanta", Price = 1.20M, Timestamp = DateTime.UtcNow },
+                new Product { Id = Guid.NewGuid(), ProductNumber = 8, Count = 5, Name = "Cola zero", Price = 1.30M, Timestamp = DateTime.UtcNow },
                 new Product { Id = Guid.NewGuid(), ProductNumber = 9, Count = 5, Name = "Cola", Price = 1.45M, Timestamp = DateTime.UtcNow },
                 new Product { Id = Guid.NewGuid(), ProductNumber = 10, Count = 5, Name = "Bear", Price = 1.70M, Timestamp = DateTime.UtcNow },
                 new Product { Id = Guid.NewGuid(), ProductNumber = 11, Count = 5, Name = "Orange juice", Price = 1.45M, Timestamp = DateTime.UtcNow }

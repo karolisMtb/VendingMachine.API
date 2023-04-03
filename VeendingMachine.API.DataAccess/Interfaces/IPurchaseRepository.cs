@@ -9,6 +9,6 @@ namespace VeendingMachine.API.DataAccess.Interfaces
         Task AddPurchaseAsync(Purchase purchase);
         Task<bool> IsLastPurchasePaid();
          Task SaveChangesAsync();
-        Purchase GetLastNotPaidPurchase();
+        Task<Purchase> GetLastNotPaidPurchaseAsync();
     }
 }

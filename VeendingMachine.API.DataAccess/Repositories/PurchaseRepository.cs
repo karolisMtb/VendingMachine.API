@@ -45,9 +45,9 @@ namespace VeendingMachine.API.DataAccess.Repositories
             return true;
         }
 
-        public Purchase GetLastNotPaidPurchase()
+        public async Task<Purchase> GetLastNotPaidPurchaseAsync()
         {
-            var lastNotPaidPurchase = _vendorContext.Purchases.OrderByDescending(x => x.Timestamp).Include(x => x.Product).FirstOrDefault(x => x.Paid == false);
+            var lastNotPaidPurchase = await _vendorContext.Purchases.OrderByDescending(x => x.Timestamp).Include(x => x.Product).FirstOrDefaultAsync(x => x.Paid == false);
 
             if (lastNotPaidPurchase == null)
             {

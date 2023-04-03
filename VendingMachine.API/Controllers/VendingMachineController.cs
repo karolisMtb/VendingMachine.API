@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using VeendingMachine.API.DataAccess.Interfaces;
 using VeendingMachine.API.DataAccess.Model;
 using VendingMachine.API.BusinessLogic.Interfaces;
@@ -12,15 +13,18 @@ namespace VendingMachine.API.Controllers
         private readonly ILogger<VendingMachineController> _logger;
         private readonly IVendingMachineService _vendingMachineService;
         private readonly IPaymentService _paymentService;
+        private readonly IPurchaseRepository _purchaseRepository;
 
 
         public VendingMachineController(ILogger<VendingMachineController> logger,
                                         IVendingMachineService vendingMachineService,
-                                        IPaymentService paymentService)
+                                        IPaymentService paymentService,
+                                        IPurchaseRepository purchaseRepository)
         {
             _logger = logger;
             _paymentService = paymentService;
             _vendingMachineService = vendingMachineService;
+            _purchaseRepository = purchaseRepository;
         }
 
         [HttpPost]
@@ -31,8 +35,10 @@ namespace VendingMachine.API.Controllers
 
             if (!lastpurchasePaid)
             {
-                //galima parasyti suma kuria reikia sumoketi uz pirma pirkini
-                return BadRequest("You have to pay first for the previous purchase");
+                var notPaidProduct = await _purchaseRepository.GetLastNotPaidPurchaseAsync();
+
+                return BadRequest("You have to pay first for the previous purchase." +
+                    $"You have to pay at least {notPaidProduct.Product.Price}");
             }
             else
             {
@@ -58,10 +64,14 @@ namespace VendingMachine.API.Controllers
         }
 
         [HttpPut]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [Route("Money")]
-        public void Money(Deposit deposit)
+        public async Task <ActionResult> Money(Deposit deposit)
         {
-            _paymentService.InitPaymentProcessAsync(deposit);
+            await _paymentService.InitPaymentProcessAsync(deposit);
+
+            return Ok();
             // sumokejimas
             // update depositStack kai sumoki pinigus
         }

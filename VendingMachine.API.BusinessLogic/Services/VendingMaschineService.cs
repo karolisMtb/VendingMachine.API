@@ -1,6 +1,7 @@
 ﻿using VeendingMachine.API.DataAccess.DatabaseContext;
 using VeendingMachine.API.DataAccess.Entities;
 using VeendingMachine.API.DataAccess.Interfaces;
+using VeendingMachine.API.DataAccess.Model;
 
 namespace VendingMachine.API.BusinessLogic.Services
 {
@@ -30,9 +31,10 @@ namespace VendingMachine.API.BusinessLogic.Services
         }
         //public async Task InitPaymentProcessAsync(Deposit deposit)
         //{
-        //    Purchase lastPurchase = GetLastPurchase();            
+        //    Purchase lastPurchase = await _purchaseRepository.GetLastNotPaidPurchaseAsync();
         //    decimal priceToPay = lastPurchase.Product.Price;
-        //    await UpdateDepositStackDbAsync(deposit, priceToPay);
+        //    //await UpdateDepositStackDbAsync(deposit, priceToPay);
+        //    await CalculateChangeAsync(deposit, priceToPay);
         //}
 
         private async Task AddToPurchasesDbAsync(Purchase purchase)
@@ -40,10 +42,10 @@ namespace VendingMachine.API.BusinessLogic.Services
             await _purchaseRepository.AddPurchaseAsync(purchase);
         }
 
-        private async Task CalculateChangeAsync()
-        {
-            throw new NotImplementedException();
-        }
+        //private async Task CalculateChangeAsync(Deposit deposit, decimal priceToPay)
+        //{
+        //    await _paymentService.CalculateChangeAsync(deposit)
+        //}
 
         public async Task<Product> GetProductAsync(int vendingNumber)
         {

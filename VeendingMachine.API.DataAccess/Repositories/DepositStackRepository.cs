@@ -17,39 +17,84 @@ namespace VeendingMachine.API.DataAccess.Repositories
             _logger = logger;
         }
 
-        public async Task AddDepositToDepositStack(Deposit deposit) 
+        public async Task AddDepositToDepositStackAsync(Deposit deposit) 
         {
-            Guid euroId = _vendorContext.MoneyUnits.Where(x => x.Name == "Euro").First().Id;
-            Guid centId = _vendorContext.MoneyUnits.Where(x => x.Name == "Ct").First().Id;
+            GetOneCentDepositStackAsync().Result.Amount += deposit.CentDeposit.oneCentCoinAmount;
+            GetTwoCentDepositStackAsync().Result.Amount += deposit.CentDeposit.twoCentCoinAmount;
+            GetFiveCentDepositStackAsync().Result.Amount += deposit.CentDeposit.fiveCentCoinAmount;
+            GetTenCentDepositStackAsync().Result.Amount += deposit.CentDeposit.tenCentCoinAmount;
+            GetTwentyCentDepositStackAsync().Result.Amount += deposit.CentDeposit.twentyCentCoinAmount;
+            GetFiftyCentDepositStackAsync().Result.Amount += deposit.CentDeposit.fiftyCentCoinAmount;
 
-            var oneCentDepositStack = _vendorContext.DepositStacks.Where(x => x.Denomination == 1 && x.MoneyUnit.Id == centId).First();
-            var twoCentDepositStack = _vendorContext.DepositStacks.Where(x => x.Denomination == 2 && x.MoneyUnit.Id == centId).First();
-            var fiveCentDepositStack = _vendorContext.DepositStacks.Where(x => x.Denomination == 5 && x.MoneyUnit.Id == centId).First();
-            var tenCentDepositStack = _vendorContext.DepositStacks.Where(x => x.Denomination == 10 && x.MoneyUnit.Id == centId).First();
-            var twentyCentDepositStack = _vendorContext.DepositStacks.Where(x => x.Denomination == 20 && x.MoneyUnit.Id == centId).First();
-            var fiftyCentDepositStack = _vendorContext.DepositStacks.Where(x => x.Denomination == 50 && x.MoneyUnit.Id == centId).First();
+            GetOneEuroDepositStackAsync().Result.Amount += deposit.OneEuroCoinAmount;
+            GetTwoEuroDepositStackAsync().Result.Amount += deposit.TwoEuroCoinAmount;            
 
-            var oneEuroDepositStack = _vendorContext.DepositStacks.Where(x => x.Denomination == 1 && x.MoneyUnit.Id == euroId).First();
-            var twoEuroDepositStack = _vendorContext.DepositStacks.Where(x => x.Denomination == 2 && x.MoneyUnit.Id == euroId).First();
+            await SaveChangesAsync();
+        }
 
-            oneCentDepositStack.Amount += deposit.CentDeposit.oneCentCoinAmount;
+        public async Task<List<DepositStack>> GetAllAsync()
+        {
+            return await _vendorContext.Set<DepositStack>().ToListAsync();
+        }
 
-            twoCentDepositStack.Amount += deposit.CentDeposit.twoCentCoinAmount;
+        public async Task<Guid> GetEuroIdAsync()
+        {
+            MoneyUnit euroMoneyUnit = await _vendorContext.MoneyUnits.Where(x => x.Name == "Euro").FirstAsync();
+            return euroMoneyUnit.Id;
+        }
 
+        public async Task<Guid> GetCentIdAsync()
+        {
+            MoneyUnit centMoneyUnit = await _vendorContext.MoneyUnits.Where(x => x.Name == "Ct").FirstAsync();
+            return centMoneyUnit.Id;
+        }
 
-            //_vendorContext.DepositStacks.Where(x => x.Id == oneCentDenominationId).First().Amount += deposit.CentDeposit.oneCentCoinAmount;
-            //_vendorContext.DepositStacks.Where(x => x.Id == twoCentDenominationId).First().Amount += deposit.CentDeposit.twoCentCoinAmount;
-            //_vendorContext.DepositStacks.Where(x => x.Id == fiveCentDenominationId).First().Amount += deposit.CentDeposit.fiveCentCoinAmount;
-            //_vendorContext.DepositStacks.Where(x => x.Id == tenCentDenominationId).First().Amount += deposit.CentDeposit.tenCentCoinAmount;
-            //_vendorContext.DepositStacks.Where(x => x.Id == twentyCentDenominationId).First().Amount += deposit.CentDeposit.twentyCentCoinAmount;
-            //_vendorContext.DepositStacks.Where(x => x.Id == fiftyCentDenominationId).First().Amount += deposit.CentDeposit.fiftyCentCoinAmount;
+        private async Task<DepositStack> GetOneCentDepositStackAsync()
+        {
+            DepositStack oneCentDepositStack = await _vendorContext.DepositStacks.Where(x => x.Denomination == 1 && x.MoneyUnit.Id == GetCentIdAsync().Result).FirstAsync();
+            return oneCentDepositStack;
+        }
 
-            //_vendorContext.DepositStacks.Where(x => x.Id == oneEuroDenomination).First().Amount += deposit.OneEuroCoinAmount;
-            //_vendorContext.DepositStacks.Where(x => x.Id == twoEuroDenomination).First().Amount += deposit.TwoEuroCoinAmount;
-            
-            _vendorContext.SaveChanges();
+        private async Task<DepositStack> GetTwoCentDepositStackAsync()
+        {
+            DepositStack twoCentDepositStack = await _vendorContext.DepositStacks.Where(x => x.Denomination == 2 && x.MoneyUnit.Id == GetCentIdAsync().Result).FirstAsync();
+            return twoCentDepositStack;
+        }
 
-            //await SaveChangesAsync();
+        private async Task<DepositStack> GetFiveCentDepositStackAsync()
+        {
+            DepositStack fiveCentDepositStack = await _vendorContext.DepositStacks.Where(x => x.Denomination == 5 && x.MoneyUnit.Id == GetCentIdAsync().Result).FirstAsync();
+            return fiveCentDepositStack;
+        }
+
+        private async Task<DepositStack> GetTenCentDepositStackAsync()
+        {
+            DepositStack tenCentDepositStack = await _vendorContext.DepositStacks.Where(x => x.Denomination == 10 && x.MoneyUnit.Id == GetCentIdAsync().Result).FirstAsync();
+            return tenCentDepositStack;
+        }
+
+        private async Task<DepositStack> GetTwentyCentDepositStackAsync()
+        {
+            DepositStack twentyCentDepositStack = await _vendorContext.DepositStacks.Where(x => x.Denomination == 20 && x.MoneyUnit.Id == GetCentIdAsync().Result).FirstAsync();
+            return twentyCentDepositStack;
+        }
+
+        private async Task<DepositStack> GetFiftyCentDepositStackAsync()
+        {
+            DepositStack fiftyCentDepositStack = await _vendorContext.DepositStacks.Where(x => x.Denomination == 50 && x.MoneyUnit.Id == GetCentIdAsync().Result).FirstAsync();
+            return fiftyCentDepositStack;
+        }
+
+        private async Task<DepositStack> GetOneEuroDepositStackAsync()
+        {
+            DepositStack fiftyCentDepositStack = await _vendorContext.DepositStacks.Where(x => x.Denomination == 1 && x.MoneyUnit.Id == GetEuroIdAsync().Result).FirstAsync();
+            return fiftyCentDepositStack;
+        }
+
+        private async Task<DepositStack> GetTwoEuroDepositStackAsync()
+        {
+            DepositStack twoEuroDepositStack = await _vendorContext.DepositStacks.Where(x => x.Denomination == 2 && x.MoneyUnit.Id == GetEuroIdAsync().Result).FirstAsync();
+            return twoEuroDepositStack;
         }
 
         public async Task AddDepositStackRangeAsync(List<DepositStack> depositStack)
@@ -59,24 +104,24 @@ namespace VeendingMachine.API.DataAccess.Repositories
             _logger.LogInformation("Table row count is {0}", _vendorContext.DepositStacks.Count().ToString());
         }
 
+        public async Task UpdateDepositStackDbAsync(Guid moneyUnitId, int coinAmount, int denomination)
+        {
+            DepositStack depositStackToUpdate = await _vendorContext.DepositStacks.Where(x => x.MoneyUnit.Id == moneyUnitId && x.Denomination == denomination).FirstAsync();
+            try
+            {
+                depositStackToUpdate.Amount -= coinAmount;
+            }
+            catch(Exception e)
+            {
+                throw new Exception("Could not update deposit stack coin amount");
+            }
+            await SaveChangesAsync();
+        }
+
         public async Task SaveChangesAsync()
         {
             await _vendorContext.SaveChangesAsync();
         }
 
-        //public Task CalculateChangeAsync(Deposit deposit, decimal amountToPay)
-        //{
-
-        //    string[] denom = { "1", "2", "5", "10", "20", "50", "100", "200" };
-        //    int[] amount = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
-        //    if(amount.Sum == )
-
-        //        // dirbu cia
-
-        //    throw new NotImplementedException();
-
-        //    return null;
-        //}
     }
 }

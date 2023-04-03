@@ -6,5 +6,6 @@ namespace VeendingMachine.API.DataAccess.Interfaces
     {
         Task AddMoneyUnitsAsync(List<MoneyUnit> moneyUnits);
         Task SaveChangesAsync();
+        Task<List<MoneyUnit>> GetAll();
     }
 }

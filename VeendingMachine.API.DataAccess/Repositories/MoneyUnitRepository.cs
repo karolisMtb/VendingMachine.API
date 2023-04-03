@@ -1,4 +1,5 @@
-﻿using VeendingMachine.API.DataAccess.DatabaseContext;
+﻿using Microsoft.EntityFrameworkCore;
+using VeendingMachine.API.DataAccess.DatabaseContext;
 using VeendingMachine.API.DataAccess.Entities;
 using VeendingMachine.API.DataAccess.Interfaces;
 
@@ -16,6 +17,11 @@ namespace VeendingMachine.API.DataAccess.Repositories
         {
             _vendorContext.MoneyUnits.RemoveRange(_vendorContext.MoneyUnits);
             await _vendorContext.MoneyUnits.AddRangeAsync(moneyUnits);
+        }
+
+        public async Task<List<MoneyUnit>> GetAll()
+        {
+            return await _vendorContext.Set<MoneyUnit>().ToListAsync();
         }
 
         public async Task SaveChangesAsync()
