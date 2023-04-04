@@ -95,6 +95,11 @@ namespace VendingMachine.API.Controllers
                     return BadRequest("Not enough change has been inserted. We're giving your change back and try again please.");
                 }
 
+                if(Utilities.ConvertDepositIntoDecimal(deposit) > 10M)
+                {
+                    return BadRequest("You have inserted too much money. Max amount is 10 euro");
+                }
+
                 //product payment flow
                 var changeResult = await _paymentService.InitPaymentProcessAsync(deposit, lastPurchase);
 
