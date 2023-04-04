@@ -1,5 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 using VeendingMachine.API.DataAccess.DatabaseContext;
 using VeendingMachine.API.DataAccess.Interfaces;
 using VeendingMachine.API.DataAccess.Repositories;
@@ -10,7 +12,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "V1",
+        Title = "Vending machine API",
+    });
+
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
+
 builder.Services.AddLogging();
 builder.Services.AddDbContext<VendorContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("SQLConnection")), ServiceLifetime.Transient);
 builder.Services.AddScoped<IDepositStackRepository, DepositStackRepository>();
@@ -20,7 +34,6 @@ builder.Services.AddScoped<IDataPopulationService, DataPopulationService>();
 builder.Services.AddScoped<IVendingMachineService, VendingMaschineService>();
 builder.Services.AddScoped<IMoneyUnitRepository, MoneyUnitRepository>();
 builder.Services.AddTransient<IPaymentService, PaymentService>();
-//issiaiskinti, ar tikrai scoped ir KODEL
 builder.Services.AddScoped<VendorContext>();
 
 var app = builder.Build();

@@ -5,7 +5,7 @@ using VendingMachine.API.BusinessLogic.Interfaces;
 
 namespace VendingMachine.API.BusinessLogic.Services
 {
-    public class PaymentService: IPaymentService
+    public class PaymentService : IPaymentService
     {
         private readonly IPurchaseRepository _purchaseRepository;
         private readonly IDepositStackRepository _depositStackRepository;
@@ -16,33 +16,15 @@ namespace VendingMachine.API.BusinessLogic.Services
             _depositStackRepository = depositStackRepository;
         }
 
-
-        //
-        public async Task InitPaymentProcessAsync(Deposit deposit)
+        public async Task<Dictionary<int, int>> InitPaymentProcessAsync(Deposit deposit, Purchase lastPurchase)
         {
-            Purchase lastPurchase = _purchaseRepository.GetLastNotPaidPurchaseAsync().Result;
-
-            if (!InsertedEnoughChange(deposit, lastPurchase.Product.Price))
-            {
-                throw new Exception("Not enough change has been inserted. We're giving your change back and try again please.");
-            }
-
             await _depositStackRepository.AddDepositToDepositStackAsync(deposit);
 
             Dictionary<int, int> changeResult = await CalculateChangeAsync(deposit, lastPurchase.Product.Price);
 
-        }
+            await _purchaseRepository.UpdateAsync(lastPurchase.Id);
 
-        private bool InsertedEnoughChange(Deposit deposit, decimal productPrice)
-        {
-            decimal totalDeposit = Utilities.ConvertDepositIntoDecimal(deposit);
-
-            if (totalDeposit >= productPrice)
-            {
-                return true;
-            }
-
-            return false;
+            return changeResult;
         }
 
         private async Task<Dictionary<int, int>> CalculateChangeAsync(Deposit deposit, decimal productPrice)
@@ -55,33 +37,33 @@ namespace VendingMachine.API.BusinessLogic.Services
 
             decimal depositTotalValue = Utilities.ConvertDepositIntoDecimal(deposit);
 
-            List<DepositStack> availableDepositStack = await _depositStackRepository.GetAllAsync(); // visi pinigai            
+            List<DepositStack> availableDepositStack = await _depositStackRepository.GetAllAsync();
 
-            foreach (var element in availableDepositStack)
-            {
-                if(element.MoneyUnit.Id == euroId)
-                {
-                    element.Denomination *= 100;
-                }
-            }
+            await ConvertEuroToCents(availableDepositStack, euroId);
 
-            var sortedDepositStack = availableDepositStack.OrderByDescending(x => x.MoneyUnit.Name).ThenBy(x => x.Denomination).ToList();
+            var sortedDepositStack = availableDepositStack.OrderBy(x => x.Denomination).ToList();
+
+            int[] coinAmountAvailable = await GetEachCoinAmountAvailableAsync(sortedDepositStack);
+
 
             decimal changeAmountToReturn = depositTotalValue - productPrice;
             decimal changeAmountInCents = changeAmountToReturn * 100;
 
             for (int i = denominations.Length - 1; i >= 0; i--)
             {
-                while (changeAmountInCents >= denominations[i])
+                while (changeAmountInCents >= denominations[i] && coinAmountAvailable[i] != 0)
                 {
                     changeAmountInCents -= denominations[i];
+                    coinAmountAvailable[i] --;
                     coinAmount[i] += 1;
                 }
             }
 
+            await ConvertCentsToEuro(availableDepositStack, euroId);
+
             Dictionary<int, int> changeResult = new Dictionary<int, int>();
 
-            for(int i = 0; i < coinAmount.Length; i++)
+            for (int i = 0; i < coinAmount.Length; i++)
             {
                 if (coinAmount[i] == 0)
                 {
@@ -91,17 +73,50 @@ namespace VendingMachine.API.BusinessLogic.Services
                 {
                     if (denominations[i] == 100 || denominations[i] == 200)
                     {
-                        _depositStackRepository.UpdateDepositStackDbAsync(euroId, coinAmount[i], denominations[i] / 100);
+                        await _depositStackRepository.UpdateDepositStackDbAsync(euroId, coinAmount[i], denominations[i] / 100);
                     }
                     else
                     {
-                        _depositStackRepository.UpdateDepositStackDbAsync(centId, coinAmount[i], denominations[i]);
+                        await _depositStackRepository.UpdateDepositStackDbAsync(centId, coinAmount[i], denominations[i]);
                     }
 
                     changeResult.Add(denominations[i], coinAmount[i]);
                 }
             }
             return changeResult;
+        }
+
+        private async Task ConvertEuroToCents(List<DepositStack> depositStackList, Guid euroId)
+        {
+            foreach (var element in depositStackList)
+            {
+                if (element.MoneyUnit.Id == euroId)
+                {
+                    element.Denomination = element.Denomination * 100;
+                }
+            }
+        }
+
+        private async Task ConvertCentsToEuro(List<DepositStack> depositStackList, Guid euroId)
+        {
+            foreach (var element in depositStackList)
+            {
+                if (element.MoneyUnit.Id == euroId)
+                {
+                    element.Denomination = element.Denomination / 100;
+                }
+            }
+        }
+
+        private async Task<int[]> GetEachCoinAmountAvailableAsync(List<DepositStack> sortedDepositStack)
+        {
+            int[] coinAmountAvailable = new int[sortedDepositStack.Count];
+            for(int i = 0; i < coinAmountAvailable.Length; i++)
+            {
+                coinAmountAvailable[i] = sortedDepositStack[i].Amount;
+            }
+
+            return coinAmountAvailable;
         }
     }
 }

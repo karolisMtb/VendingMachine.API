@@ -31,9 +31,10 @@ namespace VeendingMachine.API.DataAccess.Repositories
             }
         }
 
-        public int GetProductsCountFromDB()
+        public async Task<int> GetProductsCountFromDbAsync()
         {
-            return _vendorContext.Products.Count();
+            int productCount = await _vendorContext.Products.CountAsync();
+            return productCount;
         }
 
         public void AddProductRange(List<Product> products)
@@ -48,10 +49,3 @@ namespace VeendingMachine.API.DataAccess.Repositories
         }
     }
 }
-
-// i Endpoint ivede int produkto id
-// iskvieciamas servisas, kuris per repo gauna produkta is db
-// laukiamas mokejimas
-// kai sumokama iskviecimas servisas apskaiciuoti pinigus ir grazinti graza
-// pridedamas produktas i db prie purchases
-// updatinama depositstack db

@@ -7,8 +7,8 @@ namespace VeendingMachine.API.DataAccess.Interfaces
         Task UpdateAsync(Guid puchaseId); // updatina paid status
         void ResetPurchaseDb();
         Task AddPurchaseAsync(Purchase purchase);
-        Task<bool> IsLastPurchasePaid();
-         Task SaveChangesAsync();
+        Task<bool> IsLastPurchasePaidAsync();
+        Task SaveChangesAsync();
         Task<Purchase> GetLastNotPaidPurchaseAsync();
     }
 }

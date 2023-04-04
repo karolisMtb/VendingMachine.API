@@ -110,6 +110,7 @@ namespace VeendingMachine.API.DataAccess.Repositories
             try
             {
                 depositStackToUpdate.Amount -= coinAmount;
+                _vendorContext.DepositStacks.Update(depositStackToUpdate);
             }
             catch(Exception e)
             {

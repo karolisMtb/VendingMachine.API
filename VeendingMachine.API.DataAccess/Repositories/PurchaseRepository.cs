@@ -20,13 +20,13 @@ namespace VeendingMachine.API.DataAccess.Repositories
 
         public async Task UpdateAsync(Guid purchaseId)
         {
-            // setina purchase paid status i true
+            Purchase purchaseToUpdate = await _vendorContext.Purchases.FirstOrDefaultAsync(x => x.Id == purchaseId);
+            purchaseToUpdate.Paid = true;
+            _vendorContext.Purchases.Update(purchaseToUpdate);
+
+            await SaveChangesAsync();
         }
 
-        public async Task SaveChangesAsync()
-        {
-            await _vendorContext.SaveChangesAsync();
-        }
 
         public async Task AddPurchaseAsync(Purchase purchase)
         {
@@ -34,11 +34,10 @@ namespace VeendingMachine.API.DataAccess.Repositories
             await SaveChangesAsync();
         }
 
-        public async Task<bool> IsLastPurchasePaid()
+        public async Task<bool> IsLastPurchasePaidAsync()
         {
-            if(_vendorContext.Purchases.Count() != 0)
+            if(await _vendorContext.Purchases.AnyAsync())
             {
-                //error handling
                 Purchase lastPurchase = await _vendorContext.Purchases.OrderByDescending(x => x.Timestamp).FirstOrDefaultAsync();
                 return lastPurchase.Paid;
             }
@@ -56,7 +55,9 @@ namespace VeendingMachine.API.DataAccess.Repositories
 
             return lastNotPaidPurchase;
         }
-
-        
+        public async Task SaveChangesAsync()
+        {
+            await _vendorContext.SaveChangesAsync();
+        }        
     }
 }

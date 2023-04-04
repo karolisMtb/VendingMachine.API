@@ -6,7 +6,7 @@ namespace VeendingMachine.API.DataAccess.Interfaces
     {
         Task<Product> GetProductAsync(int vendingNumber);
         void AddProductRange(List<Product> products);
-        int GetProductsCountFromDB();
+        Task<int> GetProductsCountFromDbAsync();
         Task SaveChangesAsync();
     }
 }

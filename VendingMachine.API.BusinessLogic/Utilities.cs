@@ -1,10 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Diagnostics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VeendingMachine.API.DataAccess.Model;
+﻿using VeendingMachine.API.DataAccess.Model;
 
 namespace VendingMachine.API.BusinessLogic
 {
@@ -23,7 +17,7 @@ namespace VendingMachine.API.BusinessLogic
                                     + deposit.CentDeposit.fiveCentCoinAmount * 5
                                     + deposit.CentDeposit.tenCentCoinAmount * 10
                                     + deposit.CentDeposit.twentyCentCoinAmount * 20
-                                    + deposit.CentDeposit.fiftyCentCoinAmount * 50) / 100;
+                                    + deposit.CentDeposit.fiftyCentCoinAmount * 50) / 100.0M;
             }
 
             return sumOutOfEuroCoins + sumOutOfCentCoins;

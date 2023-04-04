@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using VeendingMachine.API.DataAccess.Entities;
 using VeendingMachine.API.DataAccess.Interfaces;
 using VeendingMachine.API.DataAccess.Model;
+using VendingMachine.API.BusinessLogic;
 using VendingMachine.API.BusinessLogic.Interfaces;
 
 namespace VendingMachine.API.Controllers
@@ -27,55 +29,87 @@ namespace VendingMachine.API.Controllers
             _purchaseRepository = purchaseRepository;
         }
 
+        /// <summary>
+        /// Endpoint which emulates a product selection from the vending machine.
+        /// </summary>
+        /// <response code="200">Success</response>
+        /// <response code="400">User side error</response>
+        /// <response code="500">Server side error</response>
         [HttpPost]
-        [Route("Product/{id}")]
-        public async Task<ActionResult> Product(int id)
+        [Route("Purchase/{id}")]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<ActionResult> Purchase(int id)
         {
+            //validation
             bool lastpurchasePaid = await _vendingMachineService.CheckIfLastPurchasePaidAsync();
 
             if (!lastpurchasePaid)
             {
                 var notPaidProduct = await _purchaseRepository.GetLastNotPaidPurchaseAsync();
-
-                return BadRequest("You have to pay first for the previous purchase." +
-                    $"You have to pay at least {notPaidProduct.Product.Price}");
+                return BadRequest($"You have to pay first for the previous purchase. You have to pay at least {notPaidProduct.Product.Price}");
             }
-            else
+
+            int productCount = await _vendingMachineService.GetTotalProductCountAsync();
+
+            if(id <= 0 || id > productCount)
             {
-                int productCount = _vendingMachineService.GetTotalProductCount();
-                if(id <= 0 || id > productCount)
-                {
-                    return BadRequest("Number should be from 1 to " + productCount--);
-                }
-
-                try
-                {
-                    await _vendingMachineService.InitProductPurchaseAsync(id);
-                    var product = await _vendingMachineService.GetProductAsync(id);
-                    return Ok($"Please insert {product.Price} in the other endpoint");
-                }
-                catch(Exception ex)
-                {
-                    _logger.LogError("Purchase event failed at initializing");
-                    return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                        ex.Message);
-                }
+                return BadRequest("Number should be from 1 to " + productCount--);
             }
+
+            //product purchase flow
+            try
+            {
+                await _vendingMachineService.InitProductPurchaseAsync(id);
+                var product = await _vendingMachineService.GetProductAsync(id);
+                return Ok($"Please insert {product.Price} in the other endpoint.");
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Product purchase failed: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+    
         }
 
+        /// <summary>
+        /// Endpoint which emulates payment for a product selected in the previous endpoint.
+        /// </summary>
+        /// <response code="200">Success</response>
+        /// <response code="400">User side error</response>
+        /// <response code="500">Server side error</response>
         [HttpPut]
         [ProducesResponseType((int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        [Route("Money")]
-        public async Task <ActionResult> Money(Deposit deposit)
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        [Route("DepositStack")]
+        public async Task <ActionResult> DepositStack(Deposit deposit)
         {
-            await _paymentService.InitPaymentProcessAsync(deposit);
+            
+            try
+            {
+                //validation
+                Purchase lastPurchase = await _purchaseRepository.GetLastNotPaidPurchaseAsync();
 
-            return Ok();
-            // sumokejimas
-            // update depositStack kai sumoki pinigus
+                if (Utilities.ConvertDepositIntoDecimal(deposit) < lastPurchase.Product.Price)
+                {
+                    return BadRequest("Not enough change has been inserted. We're giving your change back and try again please.");
+                }
+
+                //product payment flow
+                var changeResult = await _paymentService.InitPaymentProcessAsync(deposit, lastPurchase);
+
+                return Ok(changeResult);
+            }
+            catch (FileNotFoundException ex)
+            {
+                _logger.LogError($"Purchase payment failed {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Purchase payment failed {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
-
-     
     }
 }
