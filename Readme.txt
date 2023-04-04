@@ -1,4 +1,4 @@
-Instructions how to start using VendingMaschine.API V1
+Instructions how to start using VendingMachine.API V1
 
 1. https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16
 	=> Download SSMS link
